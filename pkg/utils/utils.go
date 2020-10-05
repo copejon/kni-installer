@@ -90,7 +90,7 @@ func ApplyOc(ocBinary string, kubectlContent []byte, kubeconfigPath string, retr
 // utility to execute a command and show the stdout and stderr output
 func ExecuteCommand(directory string, envVars []string, failFatal bool, showOutput bool, name string, arg ...string) ([]byte, []byte) {
 	cmd := exec.Command(name, arg...)
-
+	log.Printf("exec command: %s\n", cmd.String())
 	// set additional modifiers
 	if directory != "" {
 		cmd.Dir = directory
@@ -118,6 +118,7 @@ func ExecuteCommand(directory string, envVars []string, failFatal bool, showOutp
 			log.Println(fmt.Sprintf("Error applying command %s (%s): %s - %s", name, arg, err, errb.String()))
 		}
 	}
+
 	return outb.Bytes(), errb.Bytes()
 }
 

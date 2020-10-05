@@ -311,20 +311,26 @@ func (s Site) DownloadRepo(sitePath string, profileLayerPath string, profileRef 
 	var envVars []string
 	utils.ExecuteCommand("", envVars, true, false, "cp", "-R", fmt.Sprintf("%s/site", sitePath), fmt.Sprintf("%s/blueprint/sites/site", sitePath))
 
+	log.Printf("scanning directory tree %s for site\n", sitePath)
 	filepath.Walk(fmt.Sprintf("%s/blueprint/sites/site", sitePath), func(path string, info os.FileInfo, err error) error {
 		if err == nil {
-			if info.Name() == "kustomization.yaml" {
+			if info.Name() == "kustomization.yaml"{
+				log.Printf("processing file: %s\n", path)
 				readKustomization, err := ioutil.ReadFile(path)
 				if err != nil {
 					log.Fatal(fmt.Sprintf("Error opening kustomization file: %s", err))
 					os.Exit(1)
 				}
 
+				log.Println("Found kustomize.yaml")
+				log.Printf("replacing instances of %s with %s\n", absoluteBlueprintRepo, "../../../")
 				newKustomization := strings.Replace(string(readKustomization), absoluteBlueprintRepo, "../../../", -1)
 				if profileRef != "" {
+					log.Printf("remove references to profile %q\n", profileRef)
 					newKustomization = strings.Replace(newKustomization, fmt.Sprintf("?ref=%s", profileRef), "", -1)
 				}
 
+				log.Printf("overwriting file %s\n", path)
 				err = ioutil.WriteFile(path, []byte(newKustomization), 0)
 				if err != nil {
 					log.Fatal(fmt.Sprintf("Error writing modified kustomization file: %s", err))
