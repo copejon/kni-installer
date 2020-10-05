@@ -40,14 +40,17 @@ func ValidateRequirements(buildPath string, siteName string) {
 // utility to apply kustomize on a given directory
 func ApplyKustomize(kustomizeBinary string, kustomizePath string) []byte {
 	// retrieve executable path to inject env var
+	log.Println("getting executable path")
 	ex, err := os.Executable()
 	if err != nil {
 		log.Fatal("Error retrieving the current running path")
 		os.Exit(1)
 	}
 	exPath := filepath.Dir(ex)
+	log.Printf("setting kustomize binary location: %q\n", exPath)
 
 	envVars := []string{fmt.Sprintf("XDG_CONFIG_HOME=%s/plugins", exPath)}
+	log.Printf("setting env vars: %q\n", envVars)
 	out, _ := ExecuteCommand("", envVars, true, false, kustomizeBinary, "build", "--enable_alpha_plugins", "--reorder", "none", kustomizePath)
 
 	return out
