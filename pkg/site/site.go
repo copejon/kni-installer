@@ -249,12 +249,15 @@ func (s Site) WriteEnvFile() {
 
 // given a site, download the repo dependencies
 func (s Site) DownloadRepo(sitePath string, profileLayerPath string, profileRef string) {
+	log.Println("DownloadRepo()")
 	var blueprintRepo string
 	var absoluteBlueprintRepo string
 	var downloadRepo string
 
 	// check if we have a file or git
+	log.Printf("profileLayerPath: %v\n", profileLayerPath)
 	if strings.HasPrefix(profileLayerPath, "file://") {
+		log.Println("parshing local profile path")
 		blueprintRepo = profileLayerPath
 
 		// we need to extract the absolute repo, so we strip from profiles
@@ -264,6 +267,7 @@ func (s Site) DownloadRepo(sitePath string, profileLayerPath string, profileRef 
 		}
 		absoluteBlueprintRepo = downloadRepo
 	} else {
+		log.Println("parsing remote profile path")
 		indexGit := strings.LastIndex(profileLayerPath, "//")
 		if indexGit == -1 {
 			blueprintRepo = profileLayerPath
@@ -279,17 +283,23 @@ func (s Site) DownloadRepo(sitePath string, profileLayerPath string, profileRef 
 		}
 	}
 
-	log.Println(fmt.Sprintf("Downloading blueprint repo from %s", downloadRepo))
+	fmt.Printf("absoluteBlueprintRepo: %s\n", absoluteBlueprintRepo)
+	fmt.Printf("downloadRepo: %s\n", downloadRepo)
+
 	blueprintDir := fmt.Sprintf("%s/blueprint", sitePath)
+	log.Printf("destroying local blueprint (%s)\n", blueprintDir)
 	os.RemoveAll(blueprintDir)
 
 	if strings.HasPrefix(downloadRepo, "file://") {
+		log.Printf("Repo %s is local, copying", downloadRepo)
 		// just do a local copy
 		var envVars []string
 		os.MkdirAll(blueprintDir, 0775)
 		originPath := fmt.Sprintf("%s/.", downloadRepo[7:len(downloadRepo)])
+		log.Println("blueprint source: %s", originPath)
 		utils.ExecuteCommand("", envVars, true, false, "cp", "-a", originPath, blueprintDir)
 	} else {
+		log.Printf("Repo is remote, downloading:\n\t%s => %s", downloadRepo, blueprintDir)
 		client := &getter.Client{Src: downloadRepo, Dst: blueprintDir, Mode: getter.ClientModeAny}
 		err := client.Get()
 		if err != nil {
